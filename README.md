@@ -17,7 +17,5 @@ This project is aimed at utilizing data from fitness wearables, including activi
 
 
 ### Model Outputs
-- Activity Prediction (for each activity type)
-    - Indicator of predicted performance for specific activity type on given day
-- Fitness, Fatigue, Form values all available for viewing
-    - Activity-specific, or overall (cardio)
+- Fitness, Fatigue, Form 
+    - For baseline cardio, and baseline cardio + each activity type
