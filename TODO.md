@@ -1,5 +1,8 @@
 # To Do
 
+### Specific Actions
+- Modify gpxpy module to parse HR & temperature data
+
 ### Choices to be made
 - Decide on time horizon of
     - Sleep
@@ -12,6 +15,7 @@
     - Steps Score
     - Cardio Score
     - Activity Scores
+- Should temperature be taken into account?
 
 \* Do these need to/should these be learned by a model?
 
