@@ -52,9 +52,10 @@
             - Cardio, Activity Scores
             - Sleep Score
             - Steps Score
-        - Need methods for updating:
+        - Need methods for:
             - Adding activities of each type
-            -
+            - Updating sleep, steps values
+            - Predicting & outputting
 - Activity
     - Attributes:
         - Activity type
