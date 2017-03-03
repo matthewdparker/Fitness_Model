@@ -2,78 +2,58 @@ import pandas as pd
 import numpy as np
 import datetime
 from xml.etree import ElementTree
+import xmltodict
+
+MIN_MOVING_SPEEDS = {'cycling':2.0, 'running':1.0, 'swimming':0.1}
 
 
-def create_etree_from_file(filepath):
-    with open(filepath, 'r') as f:
-        xml_str=f.read().replace('\n', '')
-    return ElementTree.fromstring(xml_str)
+# ____________ Helper functions for parse_xml() ____________
+def extract_metadata(xmldict):
+    name = xmldict['gpx']['trk']['name']
+    act_type = xmldict['gpx']['trk']['type']
+    date = datetime.datetime.strptime(xmldict['gpx']['metadata']['time'][:10], '%Y-%m-%d')
+    return name, act_type, date
 
 
-def trackseg_etree_to_trackpts_list(trackseg):
-    """Convert etree tracksegment to list of dictionaries, each corresponding to a single trackpoint, containing keys/values for lat, lon, elevation, time, air_temp, and heart rate. Impute missing values as the mean of surrounding values.
+def unpack_trkpt(trkpt):
+    trackpoint = {}
+    if '@lat' in trkpt:
+        trackpoint['lat'] = float(trkpt['@lat'])
+    if '@lon' in trkpt:
+        trackpoint['lon'] = float(trkpt['@lon'])
+    if 'ele' in trkpt:
+        trackpoint['elevation'] = float(trkpt['ele'])
+    if 'time' in trkpt:
+        trackpoint['time'] = datetime.datetime.strptime(trkpt['time'], '%Y-%m-%dT%H:%M:%S.%fZ')
+    if 'extensions' in trkpt:
+        if 'ns3:TrackPointExtension' in trkpt['extensions']:
+            ext = trkpt['extensions']['ns3:TrackPointExtension']
+            if 'ns3:hr' in ext:
+                trackpoint['hr'] = int(ext['ns3:hr'])
+            if 'ns3:atemp' in ext:
+                trackpoint['air_temp'] = float(ext['ns3:atemp'])
+            if 'ns3:cad' in ext:
+                trackpoint['cadence'] = int(ext['ns3:cad'])
+    return trackpoint
+
+
+# ____________ Useful Functions ____________
+
+def unpack_xml(filepath):
     """
-    trackpoints = []
-    # try_air_temp = True
-    # if not trackseg[0][2][0][0]:
-    #     try_air_temp = False
-    # try_hr = True
-    # if not trackseg[0][2][0][1]:
-    #     try_hr = False
+    Unpacks GPXTrack XML file constructed by Garmin device (currently tested for Forerunner 230 and Edge 810) containing a single GPX Track and Track Segment.
 
-    for i in range(len(trackseg)):
-        trackpoint = {}
-        trackpoint['lat'] = float(trackseg[i].attrib['lat'])
-        trackpoint['lon'] = float(trackseg[i].attrib['lon'])
-        try:
-            trackpoint['elevation'] = float(trackseg[i][0].text)
-        except:
-            trackpoint['elevation'] = (float(trackseg[i-1][0].text)+float(trackseg[i+1][0].text))/2
-        try:
-            trackpoint['time'] = datetime.datetime.strptime(trackseg[i][1].text, '%Y-%m-%dT%H:%M:%S.%fZ')
-        except:
-            trackpoint['time'] = datetime.datetime.strptime(trackseg[i-1][1].text, '%Y-%m-%dT%H:%M:%S.%fZ') + (datetime.datetime.strptime(trackseg[i+1][1].text, '%Y-%m-%dT%H:%M:%S.%fZ') - datetime.datetime.strptime(trackseg[i-1][1].text, '%Y-%m-%dT%H:%M:%S.%fZ'))
-        # if try_air_temp:
-        #     try:
-        #         trackpoint['air_temp'] = float(trackseg[i][2][0][0].text)
-        #     except:
-        #         trackpoint['air_temp'] = (float(trackseg[i-1][2][0][0].text)+float(trackseg[i+1][2][0][0].text))/2
-        # if try_hr:
-        try:
-            trackseg[i][2][0][1]
-            try:
-                trackpoint['hr'] = int(trackseg[i][2][0][1].text)
-            except:
-                try:
-                    trackpoint['hr'] = int((float(trackseg[i-1][2][0][1].text)+float(trackseg[i-1][2][0][1].text))/2)
-                except:
-                    trackpoint['hr'] = float(trackseg[i-1][2][0][1].text)
-        except:
-            try:
-                trackpoint['hr'] = int(trackseg[i][2][0][0].text)
-            except:
-                try:
-                    trackpoint['hr'] = int((float(trackseg[i-1][2][0][0].text)+float(trackseg[i-1][2][0][0].text))/2)
-                except:
-                    trackpoint['hr'] = float(trackseg[i-1][2][0][0].text)
-
-        trackpoints.append(trackpoint)
-    return trackpoints
-
-
-def track_etree_to_track_dict(tree):
-    '''Takes etree created from Garmin XML, parses out data for first track segment only'''
-    d = {}
-    d['name'] = tree[1][0].text
-    d['type'] = tree[1][1].text
-    d['date'] = datetime.datetime.strptime(tree[0][1].text[:10], '%Y-%m-%d')
-    d['trackpoints'] = trackseg_etree_to_trackpts_list(tree[1][2])
-    return d
-
-
-def parse_xml_track_to_dict(filepath):
-    tree = create_etree_from_file(filepath)
-    return track_etree_to_track_dict(tree)
+    Returns tuple of name, activity type, activity date (as datetime object), and dataframe containing observational data for each trackpoint.
+    """
+    list_of_trkpt_dicts = []
+    with open(filepath, 'r') as f:
+        dct = xmltodict.parse(f.read())
+    name, act_type, date = extract_metadata(dct)
+    trkpts = dct['gpx']['trk']['trkseg']['trkpt']
+    # Iterate through each trackpoint by index
+    for trkpt in trkpts:
+        list_of_trkpt_dicts.append(unpack_trkpt(trkpt))
+    return name, act_type, date, pd.DataFrame(list_of_trkpt_dicts)
 
 
 def haversine_np(lon1, lat1, lon2, lat2):
@@ -89,17 +69,11 @@ def haversine_np(lon1, lat1, lon2, lat2):
     return dist
 
 
-def extract_track_dict_info_to_df(track_dict):
-    # Convert trackpoint data to dataframe
-    track_info = pd.DataFrame(track_dict['trackpoints'])
-    return track_info
-
-
-def engineer_features(track_info, zones=[113, 150, 168, 187]):
+def engineer_features(name, act_type, date, df, zones=[113, 150, 168, 187]):
     # 'time_delta' is elapsed time between successive points
-    track_info['time_delta'] = (track_info.time - track_info.time.shift(1)).apply(lambda x : x.total_seconds())
+    df['time_delta'] = (df.time - df.time.shift(1)).apply(lambda x : x.total_seconds())
     # 'elevation_change' is change in elevation between successive points
-    track_info['elevation_change'] = track_info.elevation - track_info.elevation.shift(1)
+    df['elevation_change'] = df.elevation - df.elevation.shift(1)
     # define helper inner-function to calculate heart rate zones
     def calculate_zone(hr):
         if hr < zones[0]:
@@ -113,27 +87,44 @@ def engineer_features(track_info, zones=[113, 150, 168, 187]):
         else:
             return 5
     # 'zone' is heart rate zone during that point
-    track_info['zone'] = track_info.hr.apply(calculate_zone)
+    df['zone'] = df.hr.apply(calculate_zone)
     # calculate 2d distances between consecutive points
-    track_info['distance_2d_ft'] = haversine_np(track_info.lon.shift(),
-                     track_info.lat.shift(),
-                     track_info.ix[1:, 'lon'],
-                     track_info.ix[1:, 'lat'])
+    df['distance_2d_ft'] = haversine_np(df.lon.shift(),
+                     df.lat.shift(),
+                     df.ix[1:, 'lon'],
+                     df.ix[1:, 'lat'])
     # calculate 3d distances between consecutive points
-    track_info['distance_3d_ft'] = np.sqrt(track_info.distance_2d_ft**2 +
-                     track_info.elevation_change**2)
-    track_info['speed_2d'] = (track_info.distance_2d_ft/5280)/(track_info.time_delta/3600)
-    track_info['speed_3d'] =     track_info['speed_2d'] = (track_info.distance_3d_ft/5280)/(track_info.time_delta/3600)
+    df['distance_3d_ft'] = np.sqrt(df.distance_2d_ft**2 +
+                     df.elevation_change**2)
+    df['speed_2d'] = (df.distance_2d_ft/5280)/(df.time_delta/3600)
+    df['speed_3d'] =     df['speed_2d'] = (df.distance_3d_ft/5280)/(df.time_delta/3600)
+    df['moving'] = df.speed_2d >= MIN_MOVING_SPEEDS[act_type]
+    return name, act_type, date, df
 
-    return track_info
 
-
-def clean_df_to_only_moving_points(df):
-    pass
+def impute_nulls(name, act_type, date, df):
+    """
+    Imputes mean of surrounding values in the column, and casts to same dtype as previous value in column. Ignores nulls in first/last rows.
+    """
+    nulls = df.isnull().unstack()
+    nulls_ind = nulls[nulls].index.values
+    for (col, row) in nulls_ind:
+        if (row != 0) and (row != df.shape[0]):
+            imputed_value = (df[col][row-1]+df[col][row+1])*0.5
+            if type(df[col][row-1]) == float:
+                df[col][row] = float(imputed_value)
+            elif type(df[col][row-1]) == int:
+                df[col][row] = int(imputed_value)
+            elif type(df[col][row-1]) == type(np.float64(0)):
+                df[col][row] = np.float64(imputed_value)
+    return name, act_type, date, df
 
 
 def parse_xml(filepath):
-    track = parse_xml_track_to_dict(filepath)
-    df = extract_track_dict_info_to_df(track)
-    df = engineer_features(df)
-    return track['name'], track['type'], track['date'], df
+    """
+    Returns tuple of name, activity_type, date, and dataframe of trackpoint data with engineered features and nulls filled with imputed values.
+    """
+    n, a, d, df = unpack_xml(filepath)
+    n, a, d, df = engineer_features(n, a, d, df)
+    n, a, d, df = impute_nulls(n, a, d, df)
+    return n, a, d, df
