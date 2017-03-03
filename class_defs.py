@@ -2,6 +2,9 @@ from parse_xml import parse_xml, get_metadata
 from calculate_stats import calculate_time_in_zones, calculate_elevation, calculate_training_load, calculate_distance_2d, calculate_distance_3d
 
 class Activity(object):
+    """
+    Activities are never modified, everything about them is specified upon creation. Many attributes (e.g. temperatures, average speeds, etc.) are available which are not used in the current fitness model but felt like they were a waste to throw away.
+    """
     __init__(self, filepath, zones = [113, 150, 168, 187]):
         self.filepath = filepath
         self.name = None
@@ -30,7 +33,6 @@ class Activity(object):
         self.time_in_zone5 = None
         self.training_load = None
         self.init()
-
 
     def init(self):
         self.name, self.type, self.date, activity_info = parse_xml(self.filepath)
@@ -66,11 +68,12 @@ class Activity(object):
 
 class Athlete(object):
     """
-    Athletes are initialized with a max heart rate, or heart rate zones (top end of first 4 of 5 zones).
+    Athletes are initialized with a max heart rate, and/or heart rate zones (top ends of ranges of first 4 of 5 zones)
 
-    Most important methods are add_activity (which requires specifying filepath to gpx file), and update_values (for updating fitness, fatigue, and form values when no workout was added in the last day or so)
+    Most important methods are add_activity (which requires specifying filepath to gpx file), update_values (for updating fitness, fatigue, and form values when no workout was added in the last day or so), and update_sleep_values (which requires .csv of sleep data downloaded from Garmin Connect)
     """
     def __init__(self, max_hr=195, zones=None):
+        self.last_update = datetime.datetime.now()
         self.max_hr = max_hr
         if zones:
             self.zones = zones
@@ -79,6 +82,8 @@ class Athlete(object):
                           int(self.max_hr*0.78),
                           int(self.max_hr*0.87),
                           int(self.max_hr*0.97)]
+        self.sleep_score = 0
+        self.sleep_history = []
         self.activity_history = []
         self.cardio_fitness = 0
         self.cardio_fatigue = 0
@@ -93,7 +98,6 @@ class Athlete(object):
         self.swimming_fatigue = 0
         self.swimming_form = 0
 
-
     def add_activity(self, filepath):
         activity = Activity(filepath, self.zones)
         activity_stats = {date : activity.date,
@@ -103,8 +107,7 @@ class Athlete(object):
         self.activity_history.insert(0, activity_stats)
         self.update_values()
 
-
-    def update_values(self):
+    def update_fitness_values(self):
         current_time = datetime.datetime.now()
         # Make sure activities are from the last 6 weeks (3,628,800 secs)
         for i in range(len(self.activity_history)):
@@ -125,6 +128,8 @@ class Athlete(object):
         # Iterate through and update all form values
         self.update_form_values()
 
+        # Update last_update
+        self.last_update = datetime.datetime.now()
 
     def clear_fit_and_fatigue_values(self):
         self.cardio_fitness = 0
@@ -136,13 +141,11 @@ class Athlete(object):
         self.swimming_fitness = 0
         self.swimming_fatigue = 0
 
-
     def update_form_values(self):
         self.cardio_form = self.cardio_fitness - self.cardio_form
         self.cycling_form = self.cycling_fitness - self.cycling_form
         self.running_form = self.running_fitness - self.running_form
         self.swimming_form = self.swimming_fitness - self.swimming_form
-
 
     def calculate_cardio_fit_and_fatigue(self):
         fitness_loads = []
@@ -153,7 +156,6 @@ class Athlete(object):
                 fatigue_loads.append(activity['training_load'])
         return int(sum(fitness_loads)*1./42), int(sum(fatigue_loads)*1./7)
 
-
     def calculate_fit_and_fatigue(self, activity_type):
         fitness_loads = []
         fatigue_loads = []
@@ -163,3 +165,13 @@ class Athlete(object):
                 if ((current_time - activity['date']).total_seconds() < 604800):
                     fatigue_loads.append(activity['training_load'])
         return int(sum(fitness_loads)*1./42), int(sum(fatigue_loads)*1./7)
+
+    def update_sleep_values(self, filepath):
+        """
+        Updates sleep values according to .csv of sleep data downloaded from Garmin Connect saved at specified filepath
+        """
+        sleep_df = pd.read_csv(filepath, skiprows=[0, 1])
+        self.sleep_history = list(.iloc[:,1])
+        mean_sleep = np.mean(sleep_vals)
+        self.sleep_score = 100*(np.mean(sleep_vals[:4])/mean_sleep)
+        self.last_update = datetime.datetime.now()
