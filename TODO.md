@@ -1,5 +1,6 @@
 # To Do
 
+- Consider moving calculate_stats functions into Activity class as methods
 
 - Modify parse_xml to accept activities without lat/long data (e.g. on treadmill or stationary bike/trainers when GPS was turned off)
     - Note: this will likely require processing TCX (rather than GPX) files
