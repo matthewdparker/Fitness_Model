@@ -14,3 +14,6 @@
 - Consider structure of convoluting cardio and activity-specific values; is this even necessary?
 
 - Write scripts to either pull sleep & steps data automatically from Garmin Connect, or to run against downloaded .csv of that data
+
+- Engineer smoothing capabilities
+    - Would this require creating whole new, smoothed GPX file?

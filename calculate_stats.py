@@ -1,9 +1,7 @@
 import numpy as np
 import pandas as pd
-# from parse_xml import parse_xml_track_to_dict
 
 def calculate_time_in_zones(df):
-    # Note: this could theoretically benefit from smoothing, though I don't know how much it would end up affecting the final result
     times = []
     for i in range(1, 6):
         times.append(df[df.zone == i].time_delta.sum()/60)
