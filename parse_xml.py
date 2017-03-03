@@ -14,6 +14,13 @@ def trackseg_etree_to_trackpts_list(trackseg):
     """Convert etree tracksegment to list of dictionaries, each corresponding to a single trackpoint, containing keys/values for lat, lon, elevation, time, air_temp, and heart rate. Impute missing values as the mean of surrounding values.
     """
     trackpoints = []
+    # try_air_temp = True
+    # if not trackseg[0][2][0][0]:
+    #     try_air_temp = False
+    # try_hr = True
+    # if not trackseg[0][2][0][1]:
+    #     try_hr = False
+
     for i in range(len(trackseg)):
         trackpoint = {}
         trackpoint['lat'] = float(trackseg[i].attrib['lat'])
@@ -26,14 +33,30 @@ def trackseg_etree_to_trackpts_list(trackseg):
             trackpoint['time'] = datetime.datetime.strptime(trackseg[i][1].text, '%Y-%m-%dT%H:%M:%S.%fZ')
         except:
             trackpoint['time'] = datetime.datetime.strptime(trackseg[i-1][1].text, '%Y-%m-%dT%H:%M:%S.%fZ') + (datetime.datetime.strptime(trackseg[i+1][1].text, '%Y-%m-%dT%H:%M:%S.%fZ') - datetime.datetime.strptime(trackseg[i-1][1].text, '%Y-%m-%dT%H:%M:%S.%fZ'))
+        # if try_air_temp:
+        #     try:
+        #         trackpoint['air_temp'] = float(trackseg[i][2][0][0].text)
+        #     except:
+        #         trackpoint['air_temp'] = (float(trackseg[i-1][2][0][0].text)+float(trackseg[i+1][2][0][0].text))/2
+        # if try_hr:
         try:
-            trackpoint['air_temp'] = float(trackseg[i][2][0][0].text)
+            trackseg[i][2][0][1]
+            try:
+                trackpoint['hr'] = int(trackseg[i][2][0][1].text)
+            except:
+                try:
+                    trackpoint['hr'] = int((float(trackseg[i-1][2][0][1].text)+float(trackseg[i-1][2][0][1].text))/2)
+                except:
+                    trackpoint['hr'] = float(trackseg[i-1][2][0][1].text)
         except:
-            trackpoint['air_temp'] = (float(trackseg[i-1][2][0][0].text)+float(trackseg[i+1][2][0][0].text))/2
-        try:
-            trackpoint['hr'] = int(trackseg[i][2][0][1].text)
-        except:
-            trackpoint['hr'] = int((float(trackseg[i-1][2][0][1].text)+float(trackseg[i-1][2][0][1].text))/2)
+            try:
+                trackpoint['hr'] = int(trackseg[i][2][0][0].text)
+            except:
+                try:
+                    trackpoint['hr'] = int((float(trackseg[i-1][2][0][0].text)+float(trackseg[i-1][2][0][0].text))/2)
+                except:
+                    trackpoint['hr'] = float(trackseg[i-1][2][0][0].text)
+
         trackpoints.append(trackpoint)
     return trackpoints
 

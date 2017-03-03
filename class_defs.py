@@ -1,11 +1,14 @@
-from parse_xml import parse_xml, get_metadata
+import datetime
+import numpy as np
+import pandas as pd
+from parse_xml import parse_xml, engineer_features
 from calculate_stats import calculate_time_in_zones, calculate_elevation, calculate_training_load, calculate_distance_2d, calculate_distance_3d
 
 class Activity(object):
     """
     Activities are never modified, everything about them is specified upon creation. Many attributes (e.g. temperatures, average speeds, etc.) are available which are not used in the current fitness model but felt like they were a waste to throw away.
     """
-    __init__(self, filepath, zones = [113, 150, 168, 187]):
+    def __init__(self, filepath, zones = [113, 150, 168, 187]):
         self.filepath = filepath
         self.name = None
         self.type = None
@@ -42,11 +45,11 @@ class Activity(object):
         self.lons = activity_info.lon
         self.elevations = activity_info.elevation
         self.heart_rates = activity_info.hr
-        self.air_temps = activity_info.air_temp
+        # self.temps = activity_info.air_temp
         self.distances_2d_ft = activity_info.distance_2d_ft
         self.distances_3d_ft = activity_info.distance_3d_ft
-        self.speeds_2d = activity_info.speeds_2d
-        self.speeds_3d = activity_info.speeds_3d
+        self.speeds_2d = activity_info.speed_2d
+        self.speeds_3d = activity_info.speed_3d
         self.total_distance_2d = calculate_distance_2d(activity_info)
         self.total_distance_3d = calculate_distance_3d(activity_info)
         self.avg_speed_2d = None
@@ -100,12 +103,12 @@ class Athlete(object):
 
     def add_activity(self, filepath):
         activity = Activity(filepath, self.zones)
-        activity_stats = {date : activity.date,
-                          type : activity.type,
-                          training_load : activity.training_load}
+        activity_stats = {'date' : activity.date,
+                          'type' : activity.type,
+                          'training_load' : activity.training_load}
         self.activity_history.sort(key = lambda x : x['date'], reverse=True)
         self.activity_history.insert(0, activity_stats)
-        self.update_values()
+        self.update_fitness_values()
 
     def update_fitness_values(self):
         current_time = datetime.datetime.now()
@@ -118,12 +121,12 @@ class Athlete(object):
         self.clear_fit_and_fatigue_values()
 
         # Update cardio fitness & fatigue
-        self.cario_fitness, self.cardio_fatigue = calculate_cardio_fit_and_fatigue()
+        self.cardio_fitness, self.cardio_fatigue = self.calculate_cardio_fit_and_fatigue()
 
         # Update fitness & fatigue values for each activity type
-        self.cycling_fitness, self.cycling_fatigue = calculate_fit_and_fatigue('cycling')
-        self.running_fitness, self.running_fatigue = calculate_fit_and_fatigue('running')
-        self.swimming_fitness, self.swimming_fatigue = calculate_fit_and_fatigue('swimming')
+        self.cycling_fitness, self.cycling_fatigue = self.calculate_fit_and_fatigue('cycling')
+        self.running_fitness, self.running_fatigue = self.calculate_fit_and_fatigue('running')
+        self.swimming_fitness, self.swimming_fatigue = self.calculate_fit_and_fatigue('swimming')
 
         # Iterate through and update all form values
         self.update_form_values()
@@ -148,6 +151,7 @@ class Athlete(object):
         self.swimming_form = self.swimming_fitness - self.swimming_form
 
     def calculate_cardio_fit_and_fatigue(self):
+        current_time = datetime.datetime.now()
         fitness_loads = []
         fatigue_loads = []
         for activity in self.activity_history:
@@ -157,6 +161,7 @@ class Athlete(object):
         return int(sum(fitness_loads)*1./42), int(sum(fatigue_loads)*1./7)
 
     def calculate_fit_and_fatigue(self, activity_type):
+        current_time = datetime.datetime.now()
         fitness_loads = []
         fatigue_loads = []
         for activity in self.activity_history:
@@ -171,7 +176,7 @@ class Athlete(object):
         Updates sleep values according to .csv of sleep data downloaded from Garmin Connect saved at specified filepath
         """
         sleep_df = pd.read_csv(filepath, skiprows=[0, 1])
-        self.sleep_history = list(.iloc[:,1])
+        self.sleep_history = list(sleep_df.iloc[:,1])
         mean_sleep = np.mean(sleep_vals)
-        self.sleep_score = 100*(np.mean(sleep_vals[:4])/mean_sleep)
+        self.sleep_score = 100*(np.mean(sleep_vals[:3])/mean_sleep)
         self.last_update = datetime.datetime.now()

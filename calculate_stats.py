@@ -15,7 +15,7 @@ def calculate_elevation(df):
 
 
 def calculate_training_load(df):
-    times = time_in_zones(df)
+    times = calculate_time_in_zones(df)
     points_per_min = [0.2, 0.4, 0.75, 1.6667, 2.]
     return int(sum([times[i]*points_per_min[i] for i in range(5)]))
 
