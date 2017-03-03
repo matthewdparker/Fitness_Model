@@ -37,8 +37,6 @@ def unpack_trkpt(trkpt):
     return trackpoint
 
 
-# ____________ Useful Functions ____________
-
 def unpack_xml(filepath):
     """
     Unpacks GPXTrack XML file constructed by Garmin device (currently tested for Forerunner 230 and Edge 810) containing a single GPX Track and Track Segment.
@@ -118,6 +116,9 @@ def impute_nulls(name, act_type, date, df):
             elif type(df[col][row-1]) == type(np.float64(0)):
                 df[col][row] = np.float64(imputed_value)
     return name, act_type, date, df
+
+
+# ________________________________________________________________________
 
 
 def parse_xml(filepath):
