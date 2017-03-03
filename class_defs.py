@@ -90,7 +90,7 @@ class Athlete(object):
 
     Most important methods are add_activity (which requires specifying filepath to gpx file), update_values (for updating fitness, fatigue, and form values when no workout was added in the last day or so), and update_sleep_values (which requires .csv of sleep data downloaded from Garmin Connect)
     """
-    def __init__(self, max_hr=195, zones=None):
+    def __init__(self, max_hr=195, zones=None, print_fitness_vals=False):
         self.last_update = datetime.datetime.now()
         self.max_hr = max_hr
         if zones:
@@ -115,7 +115,8 @@ class Athlete(object):
         self.swimming_fitness = 0
         self.swimming_fatigue = 0
         self.swimming_form = 0
-        self.print_fitness_vals()
+        if print_fitness_vals:
+            self.print_fitness_vals()
 
     def print_fitness_vals(self):
         print 'Sleep Score: {}'.format(self.sleep_score)
@@ -126,7 +127,7 @@ class Athlete(object):
         print 'Running Fitness: {}'.format(self.running_fitness)
         print 'Running Fatigue: {}'.format(self.running_fatigue)
 
-    def update_from_data_folder(self, filepath):
+    def add_all_from_folder(self, filepath):
         self.add_activities_from_folder(filepath)
         for csv_file in glob.glob(os.path.join(filepath, '*.csv')):
             self.update_sleep_values(csv_file)

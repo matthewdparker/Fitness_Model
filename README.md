@@ -16,12 +16,76 @@ The model assigns training loads to each activity based on the amount of time sp
     - Currently just average of all training loads across activities of that specific type from past 6 weeks for Fitness, 1 week for Form (based on Strava's decisions).
 - Sleep Score
     - Model calculates mean sleep over last 4 weeks as a baseline, then calculates sleep score to be average of most recent 3 nights as a percentage of baseline.
-- Steps Score
+- Steps Score [coming soon]
     - Calculated similar to sleep score, but utilizing a 2-day rather than 3-day average
-- I will be evaluating whether an exponentially down-weighted approach yields more realistic results for any of the above.
+
+Note: I will be evaluating whether an exponentially down-weighted approach yields more realistic results for any of the above. Preliminary analysis suggests this would make sense.
 
 
 ### Requirements
 - Activity data must be in GPX form from a Garmin device (for now, at least)
 - Sleep and steps data must be in .csv form, downloaded from Garmin Connect, and must contain at least 3 days' worth of values
     - More is better; recommend downloading 28-day
+
+
+### Sample Usage from Terminal
+[coming soon]
+
+
+
+
+
+### Sample Usage from Python Command Line
+
+All data (.gpx files, .csv containing sleep data) contained in a single folder:
+```python
+>>> from class_defs import Athlete
+>>> Matt = Athlete(print_fitness_vals=True)
+Sleep Score: 0
+Cardio Fitness: 0
+Cardio Fatigue: 0
+Cycling Fitness: 0
+Cycling Fatigue: 0
+Running Fitness: 0
+Running Fatigue: 0
+
+>>> Matt.add_all_from_folder('~/Desktop/Activity_Data/',
+                             print_fitness_vals=True)
+Sleep Score: 104.9
+Cardio Fitness: 7
+Cardio Fatigue: 29
+Cycling Fitness: 6
+Cycling Fatigue: 29
+Running Fitness: 0
+Running Fatigue: 0
+
+```
+
+
+Add all activity data (but not sleep data) contained in a single folder:
+```python
+>>> from class_defs import Athlete
+>>> Matt = Athlete(print_fitness_vals=True)
+Sleep Score: 0
+Cardio Fitness: 0
+Cardio Fatigue: 0
+Cycling Fitness: 0
+Cycling Fatigue: 0
+Running Fitness: 0
+Running Fatigue: 0
+
+>>> Matt.add_activities_from_folder('~/Desktop/Activity_Data/',
+                                    print_fitness_vals=True)
+Sleep Score: 0
+Cardio Fitness: 7
+Cardio Fatigue: 29
+Cycling Fitness: 6
+Cycling Fatigue: 29
+Running Fitness: 0
+Running Fatigue: 0
+```
+
+
+Other useful methods include:
+- add_activity(filepath_to_gpx), to add individual activities
+- update_sleep_values(filepath_to_csv), to overwrite sleep values
