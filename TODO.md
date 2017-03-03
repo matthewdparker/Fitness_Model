@@ -1,43 +1,12 @@
 # To Do
 
-### Specific Actions
-- Modify gpxpy module to parse HR & temperature data
+- Modify parse_xml to accommodate workouts where gps was off (e.g. treadmill/bike trainer)
 
-### Choices to be made
-- Decide on time horizon of
-    - Sleep
-    - Steps
-    - Activities
-        - Individual types
-        - Overall (cardio)
-- Coefficients for*
-    - Sleep Score
-    - Steps Score
-    - Cardio Score
-    - Activity Scores
-- Should temperature be taken into account?
-
-\* Do these need to/should these be learned by a model?
+- Modify parse_xml and/or calculate_stats to:
+    - Identify moving times (vs. stationary times)
+    - Only increment time in zones/elevation/etc. when moving
 
 
-### Formalize
-- Data input methods
-- Script structure
+- Consider exponentially down-weighting training loads from older activities (at different rates) for both fitness and fatigue calculations
 
-
-### Figure out how to
-- Work with GPX files
-    - Extract HR data points
-    - Calculate Suffer Score
-- Automate data extraction from Garmin Connect
-- Work with missing data (e.g. manual data entry when phone/watch was dead, or forgot HR monitor)
-    - Need alternative to suffer score, for activities where HR data was not captured
-
-### Incorporate additional data sources
-- Need to look at different ways companies store their data to determine whether there is a common denominator (e.g. GPX)
-    - E.g. Polar, Fitbit, Suunto, etc.
-    - Look at platforms as well - Strava, Nike+, etc.
-
-
-### Web App
-- Start thinking about scope, required inputs, etc.
+- Consider structure of convoluting cardio and activity-specific values; is this even necessary?
