@@ -7,7 +7,7 @@ This project is aimed at utilizing data from fitness wearables, including activi
 
 The model currently exclusively uses heart rate monitoring as a measure for effort, reflecting my personal usage of a HR monitor whenever I exercise, and the fact I don't have a cycling power meter/wattbike/etc. Other measures of effort/stress may be added in the future.
 
-The model assigns training loads to each activity based on the amount of time spent in each HR zone, with different zones accumulating points at different rates.
+The model assigns training loads to each activity based on a points system derived from the amount of time spent in each HR zone, with different zones accumulating points at different rates.
 
 ### Model Outputs
 - Cardio Fitness/Fatigue/Form Values
