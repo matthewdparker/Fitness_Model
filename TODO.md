@@ -17,3 +17,6 @@
 
 - Engineer smoothing capabilities
     - Would this require creating whole new, smoothed GPX file?
+
+- Decide on long-term storage / reuse methods
+    - Just pickle & unpickle Athlete object?
