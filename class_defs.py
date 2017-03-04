@@ -100,7 +100,7 @@ class Athlete(object):
                           int(self.max_hr*0.78),
                           int(self.max_hr*0.87),
                           int(self.max_hr*0.97)]
-        self.sleep_score = 0
+        self.sleep_score = 100
         self.sleep_history = []
         self.activity_history = []
         self.cardio_fitness = 0

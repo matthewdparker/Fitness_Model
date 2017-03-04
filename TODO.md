@@ -1,6 +1,7 @@
 # To Do
 
 - Consider moving calculate_stats functions into Activity class as methods
+    - Consider also adding engineer_features and impute_nulls to Activity class as well
 
 - Modify parse_xml to accept activities without lat/long data (e.g. on treadmill or stationary bike/trainers when GPS was turned off)
     - Note: this will likely require processing TCX (rather than GPX) files
@@ -20,3 +21,6 @@
 
 
 - Add functionality to allow user to input Strava login info and automatically pull activities from Strava API
+
+
+- Look into whether it makes sense to define activity-specific zones; e.g. three hours cycling at 120 bpm is not identical to three hours running at 140 bpm.
