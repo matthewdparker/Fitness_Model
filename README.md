@@ -74,8 +74,7 @@ Cycling Fatigue: 0
 Running Fitness: 0
 Running Fatigue: 0
 
->>> Matt.add_activities_from_folder('~/Desktop/Activity_Data/',
-                                    print_fitness_vals=True)
+>>> Matt.add_activities_from_folder('~/Desktop/Activity_Data/')
 Sleep Score: 0
 Cardio Fitness: 7
 Cardio Fatigue: 29
@@ -86,6 +85,26 @@ Running Fatigue: 0
 ```
 
 
+Check time in zones over last 7 days, 6 weeks:
+```python
+>>> from class_defs import Athlete
+>>> Matt = Athlete()
+>>> Matt.add_all_from_folder(print_fitness_vals=False)
+>>> Matt.print_time_in_zones()
+Minutes in Zones Over Last 6 Weeks:
+	Zone 1: 3
+	Zone 2: 224
+	Zone 3: 252
+	Zone 4: 27
+	Zone 5:0
+
+Minutes in Zones Over Last 1 Week:
+	Zone 1: 0
+	Zone 2: 56
+	Zone 3: 60
+	Zone 4: 17
+	Zone 5:0
+```
 Other useful methods include:
 - add_activity(filepath_to_gpx), to add individual activities
 - update_sleep_values(filepath_to_csv), to overwrite sleep values

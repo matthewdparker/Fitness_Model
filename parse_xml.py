@@ -11,7 +11,7 @@ MIN_MOVING_SPEEDS = {'cycling':2.0, 'running':1.0, 'swimming':0.1}
 def extract_metadata(xmldict):
     name = xmldict['gpx']['trk']['name']
     act_type = xmldict['gpx']['trk']['type']
-    date = datetime.datetime.strptime(xmldict['gpx']['metadata']['time'][:10], '%Y-%m-%d')
+    date = datetime.datetime.strptime(xmldict['gpx']['metadata']['time'], '%Y-%m-%dT%H:%M:%S.%fZ')
     return name, act_type, date
 
 
