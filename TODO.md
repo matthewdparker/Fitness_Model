@@ -1,5 +1,7 @@
 # To Do
 
+- Implement command-line functionality
+
 - Consider moving calculate_stats functions into Activity class as methods
     - Consider also adding engineer_features and impute_nulls from parse_xml.py to Activity class as well
 
