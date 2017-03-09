@@ -4,13 +4,26 @@
 
 
 - Start creating exciting graphs, charts, etc.
+    - Evolution of stats over time
+        - Fitness/Freshness/Fatigue
+        - Weekly/Monthly Time in Zones
+        - Percentages plot of activity profiles over time, like this one found at http://bit.ly/2mHAz60
+    - Workout-specific plots
+        - Plot fitness/freshness/fatigue (over time)
+        - Plot HR, speed, elevation for a workout
+        - Plot GPS data for workout
+        - Plot time in zones
+    - Marginal impact plots
+        - Highlight the effect of workouts on fitness/fatigue/form, etc. plots
+            - Allow selection of workouts, to see what it would look like without them
+            - Allow user to create hypothetical workout, and see what fitness/freshness/fatigue would look like with them
 
 
 - Consider moving calculate_stats functions into Activity class as methods
     - Consider also adding engineer_features and impute_nulls from parse_xml.py to Activity class as well
 
 
-- Consider structure of convoluting cardio and activity-specific values; is this even necessary?
+- Create functionality which allows for either/both profiling current fitness (e.g. distance, sprint, power, etc.), and setting a target fitness profile, by utilizing primarily time-in-zones data over time (both absolute, and proportional)
 
 
 - Engineer smoothing capabilities
@@ -29,7 +42,13 @@
 
 
 - Implement Sleep-Informed Scores (cardio fitness, cycling fatigue, etc.) which convolutes Sleep Score and other scores
-    - Need a rigorous way to do this
+    - Need to research a rigorous way to do this
+
+
+- Consider models which convoluting cardio and activity-specific stats; is this even necessary?
 
 
 - Make Zones attribute (and associated methods) more flexible, so users can put in their own number of zones [and respective upper limits of each zone]
+
+
+- Consider starting to incorporate power analysis (including estimating power)
