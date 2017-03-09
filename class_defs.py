@@ -3,8 +3,10 @@ import glob
 import datetime
 import numpy as np
 import pandas as pd
+import cPickle as pickle
 from operator import add, truediv
-from parse_xml import parse_xml
+from parse_xml import parse_gpx, parse_tcx
+from utils import calc_fit_from_list, calc_fat_from_list, calc_norm_factor
 from calculate_stats import time_in_zones, elevation, training_load, distance_2d, distance_3d, avg_speed_2d, avg_speed_3d, avg_cadence
 
 
@@ -14,6 +16,7 @@ class Activity(object):
     """
     def __init__(self, filepath, zones = [113, 150, 168, 187]):
         self.filepath = filepath
+        self.filetype = filepath.split('.')[-1]
         self.name = None
         self.type = None
         self.date = None
@@ -44,7 +47,10 @@ class Activity(object):
         self.init()
 
     def init(self):
-        self.name, self.type, self.date, activity_info = parse_xml(self.filepath)
+        if self.filetype == 'gpx':
+            self.name, self.type, self.date, activity_info = parse_gpx(self.filepath)
+        elif self.filetype == 'tcx':
+            self.name, self.type, self.date, activity_info = parse_tcx(self.filepath)
 
         if 'lat' in activity_info.columns.values:
             self.lats = activity_info.lat
@@ -189,6 +195,8 @@ class Athlete(object):
     def add_activities_from_folder(self, filepath, print_fitness_vals=False):
         for gpx_file in glob.glob(os.path.join(filepath, '*.gpx')):
             self.add_activity(gpx_file)
+        for tcx_file in glob.glob(os.path.join(filepath, '*.tcx')):
+            self.add_activity(tcx_file)
         if print_fitness_vals:
             self.print_fitness_vals()
 
@@ -216,37 +224,36 @@ class Athlete(object):
         This method is purely a helper for other updating methods. Updates fitness/fatigue/form values and time_in_zones_42day, time_in_zones_7day to match self.activity_history.
         """
         current_time = datetime.datetime.now()
-        cardio_fitness_loads = []
-        cardio_fatigue_loads = []
-        cycling_fitness_loads = []
-        cycling_fatigue_loads = []
-        running_fitness_loads = []
-        running_fatigue_loads = []
+        cardio_fatigue_list = []
+        cycling_fitness_list = []
+        cycling_fatigue_list = []
+        running_fitness_list = []
+        running_fatigue_list = []
         time_in_zones_7day = [0, 0, 0, 0, 0]
         time_in_zones_42day = [0, 0, 0, 0, 0]
         for activity in self.activity_history:
             # If the activity date is less than 6 weeks ago, add to fitness_loads
-            if (current_time - activity.date).total_seconds() < 3628800:
-                cardio_fitness_loads.append(activity.training_load)
-                time_in_zones_42day = map(add, time_in_zones_42day, activity.time_in_zones)
+            days = round((current_time - activity.date).total_seconds()*1./86400, 0)
+            time_in_zones_42day = map(add, time_in_zones_42day, activity.time_in_zones)
+            if activity.type == 'cycling':
+                cycling_fitness_list.append(activity)
+            elif activity.type == 'running':
+                running_fitness_list.append(activity)
+            if ((current_time - activity.date).total_seconds() < 604800):
+                cardio_fatigue_list.append(activity)
+                time_in_zones_7day = map(add, time_in_zones_7day, activity.time_in_zones)
                 if activity.type == 'cycling':
-                    cycling_fitness_loads.append(activity.training_load)
+                    cycling_fatigue_list.append(activity)
                 elif activity.type == 'running':
-                    running_fitness_loads.append(activity.training_load)
-                if ((current_time - activity.date).total_seconds() < 604800):
-                    cardio_fatigue_loads.append(activity.training_load)
-                    time_in_zones_7day = map(add, time_in_zones_7day, activity.time_in_zones)
-                    if activity.type == 'cycling':
-                        cycling_fatigue_loads.append(activity.training_load)
-                    elif activity.type == 'running':
-                        running_fatigue_loads.append(activity.training_load)
-
-        self.cardio_fitness = int(sum(cardio_fitness_loads)*1./42)
-        self.cardio_fatigue = int(sum(cardio_fatigue_loads)*1./7)
-        self.cycling_fitness = int(sum(cycling_fitness_loads)*1./42)
-        self.cycling_fatigue = int(sum(cycling_fatigue_loads)*1./7)
-        self.running_fitness = int(sum(running_fitness_loads)*1./42)
-        self.running_fatigue = int(sum(running_fatigue_loads)*1./7)
+                    running_fatigue_list.append(activity)
+        # All activities contribute to cardio fitness
+        self.cardio_fitness = calc_fit_from_list(self.activity_history)
+        # All other stats are calculated from associated lists of activities
+        self.cardio_fatigue = calc_fat_from_list(cardio_fatigue_list)
+        self.cycling_fitness = calc_fit_from_list(cycling_fitness_list)
+        self.cycling_fatigue = calc_fat_from_list(cycling_fatigue_list)
+        self.running_fitness = calc_fit_from_list(running_fitness_list)
+        self.running_fatigue = calc_fat_from_list(running_fatigue_list)
         self.time_in_zones_7day = time_in_zones_7day
         self.time_in_zones_42day = time_in_zones_42day
 
@@ -267,8 +274,21 @@ class Athlete(object):
         """
         sleep_df = pd.read_csv(filepath, skiprows=[0, 1])
         self.sleep_history = list(sleep_df.iloc[:,1])
-        mean_sleep = np.mean(self.sleep_history)
-        self.sleep_score = round(100*(np.mean(self.sleep_history[-3:])/mean_sleep), 1)
+        n = len(self.sleep_history)
+        # Calculate & normalize long-term exp. weighted sleep score
+        total_sleep = 0
+        for i in range(len(self.sleep_history)):
+            total_sleep += self.sleep_history[i]*np.exp((i-n)*1./n)
+        tot_norm_factor = calc_norm_factor(n)
+        total_sleep = total_sleep/tot_norm_factor
+        # Calculate & normalize short-term exp. weighted sleep score
+        recent_sleep = 0
+        for i in range(3):
+            recent_sleep += self.sleep_history[-i]*np.exp(-i*1./3)
+        rec_norm_factor = calc_norm_factor(3)
+        recent_sleep = recent_sleep/rec_norm_factor
+        # Update athlete attributes
+        self.sleep_score = round(100*(recent_sleep/total_sleep), 1)
         self.last_update = datetime.datetime.now()
 
     def update_hr_info(self, Max_hr=None, Zones=None):
@@ -287,3 +307,7 @@ class Athlete(object):
             if Zones == self.zones:
                 self.zones = [int(Max_hr*0.59), int(Max_hr*0.78),
                               int(Max_hr*0.87), int(Max_hr*0.97)]
+
+    def save(self, filepath):
+        with open(filepath, 'wb') as f:
+            pickle.dump(self, f)

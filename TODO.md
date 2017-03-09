@@ -2,16 +2,13 @@
 
 - Implement command-line functionality
 
+
+- Start creating exciting graphs, charts, etc.
+
+
 - Consider moving calculate_stats functions into Activity class as methods
     - Consider also adding engineer_features and impute_nulls from parse_xml.py to Activity class as well
 
-- Modify parse_xml to accept activities without lat/long data (e.g. on treadmill or stationary bike/trainers when GPS was turned off)
-    - Note: this will likely require processing TCX (rather than GPX) files
-
-
-- Implement exponential down-weighting of stats (training loads, time in zones, etc.) from older activities (at different rates) for both fitness and fatigue calculations
-
-- Implement exponential down-weighting of Sleep Score on both short (3-day) and long (up to 28-day) timescales
 
 - Consider structure of convoluting cardio and activity-specific values; is this even necessary?
 
@@ -21,7 +18,8 @@
 
 
 - Decide on long-term storage / reuse methods
-    - Just pickle & unpickle Athlete object?
+    - Just pickle & unpickle Athlete object? Temporarily, yes
+        - Long-term will shoot for app interface, with database of athletes & activities and credentialed login.
 
 
 - Add functionality to allow user to input Strava login info and automatically pull activities from Strava API
@@ -31,3 +29,7 @@
 
 
 - Implement Sleep-Informed Scores (cardio fitness, cycling fatigue, etc.) which convolutes Sleep Score and other scores
+    - Need a rigorous way to do this
+
+
+- Make Zones attribute (and associated methods) more flexible, so users can put in their own number of zones [and respective upper limits of each zone]
