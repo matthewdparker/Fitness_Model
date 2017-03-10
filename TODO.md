@@ -5,14 +5,11 @@
 
 - Start creating exciting graphs, charts, etc.
     - Evolution of stats over time
-        - Fitness/Freshness/Fatigue
+        - Fix bugs in plotting.py
         - Weekly/Monthly Time in Zones
         - Percentages plot of activity profiles over time, like this one found at http://bit.ly/2mHAz60
     - Workout-specific plots
-        - Plot fitness/freshness/fatigue (over time)
-        - Plot HR, speed, elevation for a workout
         - Plot GPS data for workout
-        - Plot time in zones
     - Marginal impact plots
         - Highlight the effect of workouts on fitness/fatigue/form, etc. plots
             - Allow selection of workouts, to see what it would look like without them

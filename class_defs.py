@@ -20,10 +20,13 @@ class Activity(object):
         self.name = None
         self.type = None
         self.date = None
+        self.time_deltas = None
+        self.moving = None
         self.lats = None
         self.lons = None
         self.elevations = None
         self.heart_rates = None
+        self.heart_rate_zones = None
         self.temps = None
         self.cadences = None
         self.avg_cadence = None
@@ -48,9 +51,11 @@ class Activity(object):
 
     def init(self):
         if self.filetype == 'gpx':
-            self.name, self.type, self.date, activity_info = parse_gpx(self.filepath)
+            self.name, self.type, self.date, activity_info = parse_gpx(self.filepath, zones=self.zones)
         elif self.filetype == 'tcx':
-            self.name, self.type, self.date, activity_info = parse_tcx(self.filepath)
+            self.name, self.type, self.date, activity_info = parse_tcx(self.filepath, zones=self.zones)
+
+        self.time_deltas = activity_info.time_delta
 
         if 'lat' in activity_info.columns.values:
             self.lats = activity_info.lat
@@ -64,8 +69,9 @@ class Activity(object):
                 self.total_distance_3d = distance_3d(activity_info)
                 self.avg_speed_2d = avg_speed_2d(activity_info)
                 self.avg_speed_3d = avg_speed_3d(activity_info)
+                self.moving = activity_info.moving
 
-        if 'elevations' in activity_info.columns.values:
+        if 'elevation' in activity_info.columns.values:
             self.elevations = activity_info.elevation
             gain, loss = elevation(activity_info)
             self.elevation_gain = gain
@@ -73,6 +79,7 @@ class Activity(object):
 
         if 'hr' in activity_info.columns.values:
             self.heart_rates = activity_info.hr
+            self.heart_rate_zones = activity_info.zone
             zones = time_in_zones(activity_info)
             self.time_in_zone1 = zones[0]
             self.time_in_zone2 = zones[1]
@@ -201,7 +208,7 @@ class Athlete(object):
             self.print_fitness_vals()
 
     def add_activity(self, filepath, print_fitness_vals=False):
-        activity_full = Activity(filepath, self.zones)
+        activity_full = Activity(filepath, zones=self.zones)
         activity = Activity_Stats(activity_full)
         # Check to see if activity already exists by comparing dates (which include precision down to min/sec)
         new_activity = True

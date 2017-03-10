@@ -9,7 +9,7 @@ def time_in_zones(df):
         df_zone = df[df.zone == i]
         if 'moving' in df.columns.values:
             df_zone = df_zone[df_zone.moving == True]
-        times.append(df_zone.time_delta.sum()/60)
+        times.append(int(round(df_zone.time_delta.sum()/60, 0)))
     return times
 
 

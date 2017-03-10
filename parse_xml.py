@@ -162,21 +162,21 @@ def unpack_tcx(filepath):
 
 # _____________________________________________________________
 
-def parse_gpx(filepath):
+def parse_gpx(filepath,  zones=[113, 150, 168, 187]):
     """
     Returns tuple of name, activity_type, date, and dataframe of trackpoint data with engineered features and nulls filled with imputed values.
     """
     n, a, d, df = unpack_gpx(filepath)
-    n, a, d, df = engineer_features(n, a, d, df)
+    n, a, d, df = engineer_features(n, a, d, df, zones=zones)
     n, a, d, df = impute_nulls(n, a, d, df)
     return n, a, d, df
 
 
-def parse_tcx(filepath):
+def parse_tcx(filepath, zones=[113, 150, 168, 187]):
     """
     Returns tuple of name, activity_type, date, and dataframe of trackpoint data with engineered features and nulls filled with imputed values.
     """
     n, a, d, df = unpack_tcx(filepath)
-    n, a, d, df = engineer_features(n, a, d, df)
+    n, a, d, df = engineer_features(n, a, d, df, zones=zones)
     n, a, d, df = impute_nulls(n, a, d, df)
     return n, a, d, df
