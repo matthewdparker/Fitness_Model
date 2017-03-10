@@ -22,11 +22,11 @@ The model assigns training loads to each activity based on a points system deriv
 Note: I will be evaluating whether an exponentially down-weighted approach yields more realistic results for any of the above. Preliminary analysis suggests this would make sense.
 
 
-### Requirements
-- Activity data must be in GPX form from a Garmin device (for now, at least)
+### Requirements & Limitations
+- Activity data must be in GPX or TCX form from a Garmin device (for now, at least)
 - Sleep and steps data must be in .csv form, downloaded from Garmin Connect, and must contain at least 3 days' worth of values
     - More is better; recommend downloading 28-day
-
+- Power data is currently not supported
 
 ### Sample Usage from Terminal
 [coming soon]
