@@ -84,27 +84,14 @@ Running Fitness: 0
 Running Fatigue: 0
 ```
 
+### Sample Outputs
 
-Check time in zones over last 7 days, 6 weeks:
-```python
->>> from class_defs import Athlete
->>> Matt = Athlete()
->>> Matt.add_all_from_folder(print_fitness_vals=False)
->>> Matt.print_time_in_zones()
-Minutes in Zones Over Last 6 Weeks:
-	Zone 1: 3
-	Zone 2: 224
-	Zone 3: 252
-	Zone 4: 27
-	Zone 5:0
+There is currently minor plotting functionality implemented in plotting.py, which should be scaled out over the near future and rolled into a web app. Here are a few examples of the current functionality, utilizing a few of my recent workouts. Notice that fitness/fatigue/form are low for the first few plotted days, then start to take off; this reflects some downtime taken after the holidays!
 
-Minutes in Zones Over Last 1 Week:
-	Zone 1: 0
-	Zone 2: 56
-	Zone 3: 60
-	Zone 4: 17
-	Zone 5:0
-```
-Other useful methods include:
-- add_activity(filepath_to_gpx), to add individual activities
-- update_sleep_values(filepath_to_csv), to overwrite sleep values
+Plot of activity heart rate data and time in zones:
+
+![alt tag](images/activity_hr_data_plot.png)
+
+Plot of fitness, fatigue, and form:
+
+![alt tag](images/fitness_fatigue_form_plot.png)
