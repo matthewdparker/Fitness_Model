@@ -8,7 +8,7 @@ from matplotlib.colors import ListedColormap, BoundaryNorm
 from scipy.interpolate import spline
 from calculate_stats import time_in_zones
 from parse_xml import parse_gpx, parse_tcx
-
+from utils import calculate_daily_training_loads, calculate_daily_fitness_fatigue_form
 
 
 # _______________ Plotting Functions for Workout Data _______________
@@ -128,77 +128,8 @@ def plot_time_in_zones(filepath, zones=[113, 150, 168, 187], Max_hr=195):
 
 # _______________ Plotting Functions for Multi-Day Stats _______________
 
-def calculate_daily_tls(athlete):
-    # Find age of oldest activity
-    current_date = datetime.datetime.now().date()
-    activities = athlete.activity_history
-    activities.sort(key = lambda x : x.date)
-    oldest_date = activities[0].date.date()
-    n_days = (current_date - oldest_date).days
-
-    cardio_daily_tl = []
-    cycling_daily_tl = []
-    running_daily_tl = []
-    # Iterate through activities list, append daily training load (or 0) to each activities list
-    act_num = 0
-    for age in range(n_days, -1, -1):
-        # Initialize daily training loads are 0
-        cardio_tl = 0
-        cycling_tl = 0
-        running_tl = 0
-        try_next_act = True
-        # Check if the next activity to be examined is the same age as our 'age' tracker. If so, update daily training loads respectively, and if not then continue.
-        while try_next_act:
-            if (current_date-activities[act_num].date.date()).days == age:
-                cardio_tl += activities[act_num].training_load
-                if activities[act_num].type == 'cycling':
-                    cycling_tl += activities[act_num].training_load
-                elif activities[act_num].type == 'running':
-                    running_tl += activities[act_num].training_load
-                # If all activities have been iterated through, exit. Otherwise, try the next activity in activities_list
-                if act_num == len(activities)-1:
-                    try_next_act = False
-                else:
-                    act_num += 1
-            else:
-                try_next_act = False
-        cardio_daily_tl.append(cardio_tl)
-        cycling_daily_tl.append(cycling_tl)
-        running_daily_tl.append(running_tl)
-    return cardio_daily_tl, cycling_daily_tl, running_daily_tl
-
-
-def calculate_daily_fitness_freshness_fatigue(athlete):
-    cardio_loads, cycling_loads, running_loads = calculate_daily_tls(athlete)
-    n_days = len(cardio_loads)
-
-    # Create daily fitness lists for each activity type
-    fitness_decay = [np.exp(-i*1./42) for i in range(n_days)]
-    fitness_norm = sum(fitness_decay[:42])
-    cardio_fitness_vals = [sum(np.multiply(cardio_loads[i::-1], fitness_decay[:i+1]))/fitness_norm for i in range(0, n_days)]
-    cycling_fitness_vals = [sum(np.multiply(cycling_loads[i::-1], fitness_decay[:i+1]))/fitness_norm for i in range(0, n_days)]
-    running_fitness_vals = [sum(np.multiply(running_loads[i::-1], fitness_decay[:i+1]))/fitness_norm for i in range(0, n_days)]
-
-    # Create daily fatigue lists for each activity type
-    cardio_adj_loads = [0]*6 + cardio_loads
-    cycling_adj_loads = [0]*6 + cycling_loads
-    running_adj_loads = [0]*6 + running_loads
-    fatigue_weights = [np.exp(-x*1./7) for x in range(7)][::-1]
-    fatigue_norm = sum(fatigue_weights)
-    cardio_fatigue_vals = [sum(np.multiply(cardio_adj_loads[i:i+7], fatigue_weights))/fatigue_norm for i in range(n_days)]
-    cycling_fatigue_vals = [sum(np.multiply(cycling_adj_loads[i:i+7], fatigue_weights))/fatigue_norm for i in range(n_days)]
-    running_fatigue_vals = [sum(np.multiply(running_adj_loads[i:i+7], fatigue_weights))/fatigue_norm for i in range(n_days)]
-
-    # Create daily form lists for each activity type
-    cardio_form_vals = list(np.add(cardio_fitness_vals, [-i for i in cardio_fatigue_vals]))
-    cycling_form_vals = list(np.add(cycling_fitness_vals, [-i for i in cycling_fatigue_vals]))
-    running_form_vals = list(np.add(running_fitness_vals, [-i for i in running_fatigue_vals]))
-
-    return [cardio_fitness_vals, cardio_fatigue_vals, cardio_form_vals], [cycling_fitness_vals, cycling_fatigue_vals, cycling_form_vals], [running_fitness_vals, running_fatigue_vals, running_form_vals]
-
-
 def plot_fitness_fatigue_form(athlete, fitness=True, fatigue=True, form=True, activity_type='cardio', n_weeks=-1):
-    cardio_stats, cycling_stats, running_stats = calculate_daily_fitness_freshness_fatigue(athlete)
+    cardio_stats, cycling_stats, running_stats = calculate_daily_fitness_fatigue_form(athlete)
     if activity_type == 'cardio':
         stats = cardio_stats
     elif activity_type == 'cycling':

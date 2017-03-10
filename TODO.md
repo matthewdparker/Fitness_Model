@@ -18,6 +18,7 @@
 
 - Consider moving calculate_stats functions into Activity class as methods
     - Consider also adding engineer_features and impute_nulls from parse_xml.py to Activity class as well
+    - More generally, take some time and arrange functions / methods in a natural way
 
 
 - Create functionality which allows for either/both profiling current fitness (e.g. distance, sprint, power, etc.), and setting a target fitness profile, by utilizing primarily time-in-zones data over time (both absolute, and proportional)
