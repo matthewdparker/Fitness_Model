@@ -55,7 +55,8 @@ class Activity(object):
         elif self.filetype == 'tcx':
             self.name, self.type, self.date, activity_info = parse_tcx(self.filepath, zones=self.zones)
 
-        self.time_deltas = activity_info.time_delta
+        if 'time_delta' in activity_info.columns.values:
+            self.time_deltas = activity_info.time_delta
 
         if 'lat' in activity_info.columns.values:
             self.lats = activity_info.lat
@@ -118,6 +119,7 @@ class Activity_Stats(object):
         self.elevation_gain = None
         self.elevation_loss = None
         self.time_in_zones = []
+        self.training_load = 0
         self.init(activity)
 
     def init(self, activity):
@@ -210,6 +212,10 @@ class Athlete(object):
     def add_activity(self, filepath, print_fitness_vals=False):
         activity_full = Activity(filepath, zones=self.zones)
         activity = Activity_Stats(activity_full)
+        if activity.date == None:
+            if print_fitness_vals:
+                self.print_fitness_vals()
+            return
         # Check to see if activity already exists by comparing dates (which include precision down to min/sec)
         new_activity = True
         for old_activity in self.activity_history:
@@ -241,14 +247,17 @@ class Athlete(object):
         for activity in self.activity_history:
             # If the activity date is less than 6 weeks ago, add to fitness_loads
             days = round((current_time - activity.date).total_seconds()*1./86400, 0)
-            time_in_zones_42day = map(add, time_in_zones_42day, activity.time_in_zones)
+            # import pdb; pdb.set_trace()
+            if activity.time_in_zones != [None, None, None, None, None]:
+                time_in_zones_42day = map(add, time_in_zones_42day, activity.time_in_zones)
             if activity.type == 'cycling':
                 cycling_fitness_list.append(activity)
             elif activity.type == 'running':
                 running_fitness_list.append(activity)
             if ((current_time - activity.date).total_seconds() < 604800):
                 cardio_fatigue_list.append(activity)
-                time_in_zones_7day = map(add, time_in_zones_7day, activity.time_in_zones)
+                if activity.time_in_zones != [None, None, None, None, None]:
+                    time_in_zones_7day = map(add, time_in_zones_7day, activity.time_in_zones)
                 if activity.type == 'cycling':
                     cycling_fatigue_list.append(activity)
                 elif activity.type == 'running':

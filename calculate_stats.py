@@ -26,15 +26,26 @@ def training_load(df):
 
 
 def distance_2d(df):
-    return df.distance_2d_ft.sum()/5280
+    if 'distance_2d_ft' in df.columns.values:
+        return df.distance_2d_ft.sum()/5280
+    else:
+        return 0.001
 
 
 def distance_3d(df):
-    return df.distance_3d_ft.sum()/5280
+    if 'distance_3d_ft' in df.columns.values:
+        return df.distance_3d_ft.sum()/5280
+    else:
+        return 0.001
 
 
 def moving_time(df):
-    times = df[df.moving == True].time_delta
+    if 'moving' in df.columns.values:
+        times = df[df.moving == True].time_delta
+    elif 'time_delta' in df.columns.values:
+            times = df.time_delta
+    else:
+        times = np.array([0.01])
     moving_time = times.sum()
     return moving_time
 
@@ -47,13 +58,18 @@ def elapsed_time(df):
 def avg_speed_2d(df):
     hrs = moving_time(df)*1./3600
     miles = distance_2d(df)
-    return miles/hrs
-
+    if hrs != 0:
+        return miles/hrs
+    else:
+        return 0
 
 def avg_speed_3d(df):
     hrs = moving_time(df)*1./3600
     miles = distance_3d(df)
-    return miles/hrs
+    if hrs != 0:
+        return miles/hrs
+    else:
+        return 0
 
 
 def avg_cadence(df):

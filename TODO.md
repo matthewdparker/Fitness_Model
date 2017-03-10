@@ -6,6 +6,7 @@
 - Start creating exciting graphs, charts, etc.
     - Evolution of stats over time
         - Fix bugs in plotting.py
+        - Rewrite plot_fitness_fatigue_form to run quickly
         - Weekly/Monthly Time in Zones
         - Percentages plot of activity profiles over time, like this one found at http://bit.ly/2mHAz60
     - Workout-specific plots
@@ -50,3 +51,6 @@
 
 
 - Consider starting to incorporate power analysis (including estimating power)
+
+- Add functionality which will estimate a training load from GPS, time, and type information
+    - This might be best done by using estimated power

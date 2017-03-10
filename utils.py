@@ -17,7 +17,8 @@ def calc_fit_from_list(activity_list):
     loads_and_ages = []
     for activity in activity_list:
         days_old = int((current_time-activity.date).total_seconds()*1/86400)
-        fitness += activity.training_load*np.exp(-days_old*1./42)
+        if activity.training_load != None:
+            fitness += activity.training_load*np.exp(-days_old*1./42)
     # Normalize by sum_{i=1}^{42}e^(-i/42)
     fitness = int(round(fitness/26.234, 0))
     return fitness
@@ -29,7 +30,8 @@ def calc_fat_from_list(activity_list):
     loads_and_ages = []
     for activity in activity_list:
         days_old = int((current_time-activity.date).total_seconds()*1/86400)
-        fatigue += activity.training_load*np.exp(-days_old*1./7)
+        if activity.training_load:
+            fatigue += activity.training_load*np.exp(-days_old*1./7)
     # Normalize by sum_{i=1}^{7}e^(-i/7)
     fatigue = int(round(fatigue/4.116, 0))
     return fatigue
@@ -64,16 +66,17 @@ def calculate_daily_training_loads(athlete):
         # Check if the next activity to be examined is the same age as our 'age' tracker. If so, update daily training loads respectively, and if not then continue.
         while try_next_act:
             if (current_date-activities[act_num].date.date()).days == age:
-                cardio_tl += activities[act_num].training_load
-                if activities[act_num].type == 'cycling':
-                    cycling_tl += activities[act_num].training_load
-                elif activities[act_num].type == 'running':
-                    running_tl += activities[act_num].training_load
-                # If all activities have been iterated through, exit. Otherwise, try the next activity in activities_list
-                if act_num == len(activities)-1:
-                    try_next_act = False
-                else:
-                    act_num += 1
+                if activities[act_num].training_load:
+                    cardio_tl += activities[act_num].training_load
+                    if activities[act_num].type == 'cycling':
+                        cycling_tl += activities[act_num].training_load
+                    elif activities[act_num].type == 'running':
+                        running_tl += activities[act_num].training_load
+                    # If all activities have been iterated through, exit. Otherwise, try the next activity in activities_list
+                    if act_num == len(activities)-1:
+                        try_next_act = False
+                    else:
+                        act_num += 1
             else:
                 try_next_act = False
         cardio_daily_tl.append(cardio_tl)

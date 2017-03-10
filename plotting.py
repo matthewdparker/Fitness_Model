@@ -16,7 +16,7 @@ from utils import calculate_daily_training_loads, calculate_daily_fitness_fatigu
 def plot_activity_HR(filepath, color_hr=False, show_zones=True):
     activity = Activity(filepath)
     hr_by_sec = [activity.heart_rates[0]]
-    if activity.moving:
+    if activity.moving[0]:
         hr = activity.heart_rates[activity.moving]
         time_deltas = activity.time_deltas[activity.moving]
     else:
@@ -149,5 +149,19 @@ def plot_fitness_fatigue_form(athlete, fitness=True, fatigue=True, form=True, ac
         plt.plot(fatigue, label='Fatigue')
     if form:
         plt.plot(form, label='Form')
+    if n_weeks > 0:
+        weeks = n_weeks
+    else:
+        weeks = int(len(cardio_stats[0])*1./7)
+    if fitness:
+        if fatigue:
+            if form:
+                plt.title('Fitness, Fatigue, and Form over Trailing {} Weeks'.format(str(weeks)))
+            else:
+                plt.title('Fitness and Fatigue over Trailing {} Weeks'.format(str(weeks)))
+        elif form:
+            plt.title('Fitness and Form over Trailing {} Weeks'.format(str(weeks)))
+        else:
+            plt.title('Fitness over Trailing {} Weeks'.format(str(weeks)))
     plt.legend()
     plt.show()
