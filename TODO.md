@@ -4,9 +4,9 @@
 
 
 - Start creating exciting graphs, charts, etc.
+    - Fix calculate_daily_training_loads in class_defs
     - Evolution of stats over time
         - Fix bugs in plotting.py
-        - Rewrite plot_fitness_fatigue_form to run quickly
         - Weekly/Monthly Time in Zones
         - Percentages plot of activity profiles over time, like this one found at http://bit.ly/2mHAz60
     - Workout-specific plots
