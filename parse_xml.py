@@ -1,8 +1,7 @@
-import pandas as pd
-import numpy as np
 import datetime
-from xml.etree import ElementTree
 import xmltodict
+import numpy as np
+import pandas as pd
 from calculate_stats import avg_speed_2d
 
 # ____________ Helper functions for parsing ____________
