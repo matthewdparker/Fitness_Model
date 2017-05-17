@@ -1,8 +1,6 @@
 import numpy as np
 import pandas as pd
 
-
-
 def time_in_zones(df):
     times = []
     for i in range(1, 6):

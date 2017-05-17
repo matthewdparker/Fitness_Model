@@ -2,7 +2,6 @@
 
 - Implement command-line functionality
 
-
 - Start creating exciting graphs, charts, etc.
     - Fix calculate_daily_training_loads in class_defs
     - Evolution of stats over time
