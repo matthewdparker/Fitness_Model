@@ -36,7 +36,7 @@ def correct_activity_type(act_type, df):
             act_type = 'running'
         elif avg_speed > 1.5:
             act_type = 'hiking'
-    return act_type, df
+    return act_type
 
 
 def engineer_features(act_type, df, zones=[113, 150, 168, 187]):
@@ -203,6 +203,7 @@ def unpack_tcx(filepath):
     with open(filepath, 'r') as f:
         dct = xmltodict.parse(f.read())
     name, act_type, date = extract_metadata_tcx(dct)
+    # import pdb; pdb.set_trace()
     trkpts = dct['TrainingCenterDatabase']['Activities']['Activity']['Lap']['Track']['Trackpoint']
     # Iterate through each trackpoint by index
     for trkpt in trkpts:

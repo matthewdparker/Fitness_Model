@@ -17,7 +17,7 @@ from calculate_stats import time_in_zones, elevation, training_load, distance_2d
 
 class Activity(object):
     """
-    Activities are never modified, everything about them is specified upon creation. Many attributes (e.g. temperatures, average speeds, etc.) are available which are not used in the current fitness model but felt like they were a waste to throw away.
+    Activities are never modified, all attributes are specified upon creation. Many attributes (e.g. temperatures, average speeds, etc.) are available which are not used in the current fitness model but felt like they were a waste to throw away.
     """
     def __init__(self, filepath, zones = [113, 150, 168, 187]):
         self.filepath = filepath
@@ -287,6 +287,8 @@ class Activity_Stats(object):
     Class contains same attributes as an Activity, but does not retain the data from the .gpx (e.g. individual TrackPoint data). Primary use is to be stored in activity_history attribute list of an Athlete.
     """
     def __init__(self, activity, zones = [113, 150, 168, 187]):
+        self.save_filepath = None
+        self.last_saved_date = None
         self.name = None
         self.type = None
         self.creator = None
@@ -439,14 +441,11 @@ class Athlete(object):
         time_in_zones_7day = [0, 0, 0, 0, 0]
         time_in_zones_42day = [0, 0, 0, 0, 0]
         for activity in self.activity_history:
-            # If the activity date is less than 6 weeks ago, add to fitness_loads
-            days = round((current_time - activity.date).total_seconds()*1./86400, 0)
-            # import pdb; pdb.set_trace()
             if activity.time_in_zones != [None, None, None, None, None]:
                 time_in_zones_42day = map(add, time_in_zones_42day, activity.time_in_zones)
             if activity.type == 'cycling':
                 cycling_fitness_list.append(activity)
-            elif activity.type == 'running':
+            if activity.type == 'running':
                 running_fitness_list.append(activity)
             if ((current_time - activity.date).total_seconds() < 604800):
                 cardio_fatigue_list.append(activity)
@@ -466,7 +465,6 @@ class Athlete(object):
         self.running_fatigue = calc_fat_from_list(running_fatigue_list)
         self.time_in_zones_7day = time_in_zones_7day
         self.time_in_zones_42day = time_in_zones_42day
-
         # Iterate through and update all form values
         self.update_form_values()
 
@@ -501,6 +499,12 @@ class Athlete(object):
         self.sleep_score = round(100*(recent_sleep/total_sleep), 1)
         self.last_update = datetime.datetime.now()
 
+    def save(self):
+        current_time = datetime.datetime.now()
+        with open(self.filepath, 'w') as f:
+            pickle.dump(self, f)
+        self.last_saved_date = current_time
+
     def update_hr_info(self, Max_hr=None, Zones=None):
         """
         Can specify either max_hr or zones, or both. If only one is provided, the other will be updated based on the specified value; e.g. if only max_hr is specified, zones will be updated as a percent of max_hr.
@@ -510,7 +514,7 @@ class Athlete(object):
             if Max_hr:
                 self.max_hr = Max_hr
             else:
-                self.max_hr = int((Zones[0]*1./0.59 + Zones[1]*1./0.78 ++ Zones[2]*1./0.87 + Zones[4]*1./0.97)/4)
+                self.max_hr = int((Zones[0]*1./0.59 + Zones[1]*1./0.78 + Zones[2]*1./0.87 + Zones[3]*1./0.97)/4)
 
         elif Max_hr:
             self.max_hr = Max_hr
@@ -572,6 +576,7 @@ class Athlete(object):
         Returns a tuple of (fitness, fatigue, form) for a specific activity type. Currently works for activity types cardio, cycling, and running.
         """
         training_loads = self.calculate_daily_training_loads(act_type)
+        import pdb; pdb.set_trace()
         n_days = len(training_loads)
 
         # Create exponentially decayed daily fitness values
